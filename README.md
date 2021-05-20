@@ -6,6 +6,11 @@ https://openflights.org/data.html
 ## Loading Data
 
 ```
+# Create a python virtual environment
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
 # Load the data
 redisgraph-bulk-loader FLIGHTS -n Airport.csv  -r ROUTE.csv
 

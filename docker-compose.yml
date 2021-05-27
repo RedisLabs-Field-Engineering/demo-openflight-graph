@@ -1,0 +1,29 @@
+version: '3'
+
+volumes:
+  rdb:
+  db:
+
+services:
+  volumes-provisioner:
+    image: hasnat/volumes-provisioner
+    environment:
+      PROVISION_DIRECTORIES: "1001:1001:0755:/db"
+    volumes:
+      - "./db:/db:rw"
+  redis:
+    image: "redislabs/redisgraph:2.4.5"
+    ports:
+      - "6379:6379"
+    volumes:
+      - "./rdb:/data:rw"
+  insight:
+    image: "redislabs/redisinsight:1.10.1"
+    depends_on:
+      - volumes-provisioner
+      - redis
+    volumes:
+      - "./db:/db:rw"
+    ports:
+      - "8001:8001"
+    

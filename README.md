@@ -1,9 +1,40 @@
+# Open Flight Graph
 
-## Data Source
+## Running with Docker
+
+### Prerequisites 
+- [Docker](https://www.docker.com/products/docker-desktop)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+
+### Running Dockerized Version
+
+```
+git clone https://github.com/RedisLabs-Field-Engineering/demo-openflight-graph
+cd demo-openflight-graph
+docker-compose up
+```
+
+### Navigate to RedisInsight
+[Open This Link in Your Browser](http://localhost:8001)
+
+[Example Queries Available](./InsightQueries.md)
+
+
+## Running from Source
+
+### Data Source
 
 https://openflights.org/data.html
 
-## Loading Data
+### Running Graph
+
+RedisGraph can be run from docker
+
+```
+docker run --rm -p 6379:6379 redislabs/redisgraph:edge
+```
+
+### Loading Data
 
 ```
 # Create a python virtual environment
@@ -19,58 +50,3 @@ redis-cli
 127.0.0.1:6379> GRAPH.QUERY FLIGHTS "CALL db.idx.fulltext.createNodeIndex('Airport', 'Name')"
 
 ```
-
-
-## Queries
-
-Display all of the Labels
-
-```
-CALL db.labels()
-```
-
-Display all of the relationships
-
-```
-CALL db.relationshipTypes
-```
-
-Show me an example airport
-
-```
-MATCH (a:Airport{Country: "Japan", City: "Tokyo"}) RETURN a
-```
-
-Search Airports:
-
-```
-CALL db.idx.fulltext.queryNodes('Airport', 'Wayne') YIELD node RETURN node.IATA, node.City, node.Country, node.Name
-```
-
-
-Get from San Francisco to Oita Japan:
-
-```
-MATCH path=(s:Airport{IATA:'SFO'})-[:ROUTE*..2]->(d:Airport{IATA: 'OIT'}) RETURN DISTINCT(path)
-```
-
-Find me the unique routes from San Francisco to Jackson WY that don't go through Salt Lake City
-
-```
-MATCH route=(src:Airport{IATA:'SFO'})-[:ROUTE*..2]->(dest:Airport{IATA: 'JAC'}) WITH route, dest AS DEST, src AS SRC, nodes(route) as legs  UNWIND legs as leg WITH route, SRC, DEST, collect((leg.IATA='SLC')) as icn, collect(leg.IATA) as hops WHERE NOT true IN icn RETURN DISTINCT(hops)
-```
-
-Find me the most connected airports using Page Rank
-
-```
-CALL algo.pageRank('Airport', 'ROUTE') YIELD node, score RETURN node.Name, node.Country, score LIMIT 10
-```
-
-Find me all connections 3 deep for ATL using Breadth-first search
-
-```
-MATCH (zeronode:Airport{IATA: 'ATL'})  CALL algo.BFS(zeronode, 3, 'ROUTE') YIELD nodes  UNWIND nodes as n WITH collect(n.IATA) as signs RETURN signs
-
-```
-
-
